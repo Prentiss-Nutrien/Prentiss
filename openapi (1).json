@@ -1,0 +1,761 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "This is the standard data source API. Each data source will implement all methods here, but may not support all operations.",
+    "version": "1.0.0",
+    "title": "Tungsten 2.0 DataSource",
+    "contact": {
+      "email": "brett.hanson@nutrien.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://tungsten-api-dev.nutrien.com/v1/operations/tungsten"
+    },
+    {
+      "url": "https://tungsten-api-uat.nutrien.com/v1/operations/tungsten"
+    },
+    {
+      "url": "https://tungsten-api.nutrien.com/v1/operations/tungsten"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "OAuth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://tungsten-api-dev.nutrien.com/oauth/authorize",
+            "tokenUrl": "https://tungsten-api-dev.nutrien.com/oauth/token",
+            "scopes": {
+              "read": "Grants read access",
+              "write": "Grants write access"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "SystemInPath": {
+        "name": "system",
+        "in": "path",
+        "description": "The data source that will service the request.",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "TagNameInPath": {
+        "name": "tagname",
+        "in": "path",
+        "description": "Name of the tag to be retrieved.",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "TagValueForWrite": {
+        "type": "object",
+        "required": [
+          "timeStamp"
+        ],
+        "properties": {
+          "timeStamp": {
+            "type": "string",
+            "description": "An ISO8601 formatted date/time value indicating the precise moment the value represents.",
+            "example": "2020-05-20T12:30:00.000-6:00"
+          },
+          "doubleValue": {
+            "type": "number",
+            "description": "A numeric value to write to the tag. Use only one of doubleValue or stringValue. doubleValue will be used in preference to doubleValue if both are provided."
+          },
+          "stringValue": {
+            "type": "string",
+            "description": "A string value to write to the tag. Use only one of doubleValue or stringValue. doubleValue will be used in preference to doubleValue if both are provided."
+          }
+        }
+      },
+      "TagNameValueForWrite": {
+        "type": "object",
+        "required": [
+          "tagName",
+          "timeStamp"
+        ],
+        "properties": {
+          "tagName": {
+            "type": "string",
+            "description": "The tagname receiving this value."
+          },
+          "timeStamp": {
+            "type": "string",
+            "description": "An ISO8601 formatted date/time value indicating the precise moment the value represents.",
+            "example": "2020-05-20T12:30:00.000-6:00"
+          },
+          "doubleValue": {
+            "type": "number",
+            "description": "A numeric value to write to the tag. Use only one of doubleValue or stringValue. doubleValue will be used in preference to doubleValue if both are provided."
+          },
+          "stringValue": {
+            "type": "string",
+            "description": "A string value to write to the tag. Use only one of doubleValue or stringValue. doubleValue will be used in preference to doubleValue if both are provided."
+          }
+        }
+      },
+      "ArrayOfTagNameValueForWrite": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TagNameValueForWrite"
+        }
+      },
+      "TagValue": {
+        "type": "object",
+        "properties": {
+          "tagName": {
+            "type": "string"
+          },
+          "doubleValue": {
+            "type": "number"
+          },
+          "stringValue": {
+            "type": "string"
+          },
+          "timeStamp": {
+            "type": "string",
+            "description": "An ISO8601 formatted date/time value indicating the time the value represents.",
+            "example": "2020-05-20T12:30:00.000-6:00"
+          },
+          "code": {
+            "type": "number"
+          }
+        }
+      },
+      "ArrayOfTagValue": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TagValue"
+        }
+      },
+      "TagDetail": {
+        "type": "object",
+        "properties": {
+          "tagName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dataType": {
+            "description": "0 = numeric, 1 = string, 2 = boolean, 3 = other",
+            "type": "number",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "example": 0
+          },
+          "eu": {
+            "type": "string"
+          },
+          "minEu": {
+            "type": "number"
+          },
+          "maxEu": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "OAuth2": [
+        "read",
+        "write"
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "tag",
+      "description": "Operations on an individual tag"
+    },
+    {
+      "name": "tags",
+      "description": "Operations on one or more tags"
+    }
+  ],
+  "paths": {
+    "/system/{system}/tag/{tagname}/detail": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "summary": "Metadata for one tag",
+        "description": "Retrieves description, lower/upper limits, data type, and engineering units for the provided tag.",
+        "operationId": "getTagDetail",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          },
+          {
+            "$ref": "#/components/parameters/TagNameInPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag detail retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tag not found"
+          },
+          "405": {
+            "description": "Invalid input"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/system/{system}/tag/{tagname}/exists": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "summary": "Tests that the tag exists in the data source",
+        "description": "Performs a basic check to ensure the tag exists in the data source.",
+        "operationId": "verifyTag",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          },
+          {
+            "$ref": "#/components/parameters/TagNameInPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag exists",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Invalid input"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/system/{system}/tag/{tagname}/value": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "summary": "One tag, one value",
+        "description": "Workhorse method. This will retrieve a single value from the data source for one tag. It can any of multiple reductions.",
+        "operationId": "getTagValue",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          },
+          {
+            "$ref": "#/components/parameters/TagNameInPath"
+          },
+          {
+            "in": "query",
+            "name": "TimeStamp",
+            "description": "ISO8601 Date/Time indicating the desired timestamp for the data retrieval. Allows the data source to determine the retrieval method for the value if interpolation method isn't specified.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "interpolation",
+            "description": "One of 'none', 'linear', or 'step' indicating the type of interpolation / extrapolation needing to be applied to retrieved data.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "none",
+                "linear",
+                "step"
+              ]
+            },
+            "examples": {
+              "none": {
+                "value": "none",
+                "summary": "No interpolation",
+                "description": "No interpolation or extrapolation is used. This retrieves the raw value from the data source."
+              },
+              "linear": {
+                "value": "linear",
+                "summary": "Linear interpolation or extrapolation",
+                "description": "For interpolation, looks at the data points on either side of the requested timestamp and calculates the value based on the straight line value between the two samples. For extrapolation, it looks at the last two data points and determines the value at the requested time based on the tangent line. A more involved extrapolation algorithm could be used be the datasource involving more data points."
+              },
+              "step": {
+                "value": "step",
+                "summary": "Step interpolation or extrpolation",
+                "description": "For step interpolation and extrapolation, the last value prior to the requested timestamp is used."
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "closest",
+            "description": "One of 'before', 'after' indicating that if a value for the tag is not found at the precise timestamp requested, which timestamped value should be retrieved instead.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "units",
+            "description": "The measurement units to convert the resulting values. Not required if the tag units already match the desired response. Typically used to convert from a rate (tonne/hour) to mass (tonne), or convert between imperial (short ton) and metric units (tonne).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag value retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagValue"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tag not found"
+          },
+          "405": {
+            "description": "Invalid input"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "tag"
+        ],
+        "summary": "Tag Value object to be written",
+        "description": "",
+        "operationId": "writeTagValue",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          },
+          {
+            "$ref": "#/components/parameters/TagNameInPath"
+          }
+        ],
+        "requestBody": {
+          "description": "One or more TagValueForWrite objects to be written to the data source.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TagValueForWrite"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tag value written successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tag not found"
+          },
+          "405": {
+            "description": "Validation exception"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/system/{system}/tag/{tagname}/value/latest": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "summary": "Most recent value for one tag",
+        "description": "Retrieves the single most recent value from the data source for one tag.",
+        "operationId": "getLatestTagValue",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          },
+          {
+            "$ref": "#/components/parameters/TagNameInPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag value retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagValue"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tag not found"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/system/{system}/tag/{tagname}/values": {
+      "get": {
+        "tags": [
+          "tag"
+        ],
+        "summary": "One tag, multiple values",
+        "description": "Workhorse method. This will retrieve a multiple values from the data source for one tag. It can any of multiple reductions.",
+        "operationId": "getTagValues",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          },
+          {
+            "$ref": "#/components/parameters/TagNameInPath"
+          },
+          {
+            "in": "query",
+            "name": "startTime",
+            "description": "ISO8601 Date/Time indicating the desired starting timestamp for the data retrieval.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "endTime",
+            "description": "ISO8601 Date/Time indicating the desired ending timestamp for the data retrieval.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reductionType",
+            "description": "One of 'snapshot', 'average', 'delta', 'min', 'max', or 'stddev' indicating the type of data reduction needing to be applied to retrieved data. Do not include reductionType, reductionOffset, or reductionFrequency if you want to retrieve raw values.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reductionOffset",
+            "description": "One of 'before', 'around', or 'after' indicating how the timestamp relates to the data that is retrieved. Before indicates that the values sampled happen before the timestamp. Around indicates the timestamp is in the middle of the data sampled. After indicates that data sampled comes after the timestamp.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reductionFrequency",
+            "description": "The number of seconds between values",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "units",
+            "description": "The measurement units to convert the resulting values. Not required if the tag units already match the desired response. Typically used to convert from a rate (tonne/hour) to mass (tonne), or convert between imperial (short ton) and metric units (tonne).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximum number of results to return in this request - also known as page size.",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Which page of results to return.",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag value retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArrayOfTagValue"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tag not found"
+          },
+          "405": {
+            "description": "Invalid input"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/system/{system}/tags": {
+      "get": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "Search and retrieve a list of available tags",
+        "description": "",
+        "operationId": "getTags",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          },
+          {
+            "name": "tagname",
+            "in": "query",
+            "description": "A partial tagname to search on",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "A partial description to search on",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The maximum number of search results to return - also known as page size",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Which page of results to return",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tag value written successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tag not found (no values will be written if any of the tags isn't found)"
+          },
+          "405": {
+            "description": "Validation exception"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "read"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/system/{system}/tags/values": {
+      "post": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "Write multiple tag values to multiple tags",
+        "description": "",
+        "operationId": "writeTagValues",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SystemInPath"
+          }
+        ],
+        "requestBody": {
+          "description": "One or more TagValueForWrite objects to be written to the data source.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArrayOfTagNameValueForWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tag value written successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Tag not found (no values will be written if any of the tags isn't found)"
+          },
+          "405": {
+            "description": "Validation exception"
+          },
+          "501": {
+            "description": "Operation not supported by data source"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "write"
+            ]
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    }
+  }
+}
